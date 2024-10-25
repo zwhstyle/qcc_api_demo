@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+  <springProperty scope="context" name="ACTIVE_PROFILE" source="spring.profiles.active"/>
+  <springProperty scope="context" name="log_dir" source="log.path" defaultvale="C:/home"/>
+
+  <timestamp key="TIMESTAMP" datePattern="yyyy-MM-dd"/>
+  <property name="SYSTEM_CODE" value="qcc_api"/>
+  <property name="BASE_LOG_DIR" value="${log_dir}/logs/${SYSTEM_CODE}/${ACTIVE_PROFILE}"/>
+  <property name="LOG_DIR" value="${BASE_LOG_DIR}/log"/>
+  <property name="LOG_FILE_NAME" value="system"/>
+  <property name="LOG_ERROR_NAME" value="error"/>
+  <property name="fileLayoutPattern" value="%-20(%d{yyyyMMdd_HH:mm:ss.SSS} [%thread] [%-4relative])[%X{hostName} %X{traceNo} %X{service.timing} ] %msg%n"/>
+  <property name="logFileNamePattern" value="${LOG_FILE_NAME}_%d{yyyy-MM-dd}"/>
+  <property name="consoleLayoutPattern" value="%-20(%d{yyyyMMdd_HH:mm:ss.SSS} [%thread] [%-4relative])[%X{traceNo} %X{service.timing} ] %msg%n"/>
+
+  <contextName>${SYSTEM_CODE}</contextName>
+
+
+  <!-- 输出到控制台 -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <layout name="StandardFormat" class="ch.qos.logback.classic.PatternLayout">
+      <pattern>${consoleLayoutPattern}</pattern>
+    </layout>
+  </appender>
+
+  <!-- 输出到文件 -->
+  <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${LOG_FILE_NAME}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/%d{yyyy-MM-dd}/${LOG_FILE_NAME}_%d{yyyy-MM-dd}_%i.log.zip</fileNamePattern>
+      <maxFileSize>150MB</maxFileSize>
+      <maxHistory>90</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${fileLayoutPattern}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <!--错误日志统一输出到这里 -->
+  <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${LOG_ERROR_NAME}.log</file>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <FileNamePattern>${LOG_DIR}/%d{yyyy-MM-dd}/${LOG_ERROR_NAME}_%d{yyyy-MM-dd}_%i.log.zip</FileNamePattern>
+      <maxFileSize>1MB</maxFileSize>
+      <maxHistory>90</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${fileLayoutPattern}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+  </appender>
+
+  <logger name="com.org.qcc.dataapi.api" level="INFO"/>
+
+  <!-- 请求调试日志 -->
+  <logger name="org.springframework.web.client.RestTemplate" level="ERROR"/>
+  <logger name="org.apache.http" level="ERROR"/>
+  <logger name="org.apache.http.wire" level="ERROR"/>
+
+  <springProfile name="dev">
+    <root level="INFO">
+      <appender-ref ref="ROLLING"/>
+      <appender-ref ref="ERROR"/>
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="test">
+    <root level="INFO">
+      <appender-ref ref="ROLLING"/>
+      <appender-ref ref="ERROR"/>
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <springProfile name="prd">
+    <root level="INFO">
+      <appender-ref ref="ROLLING"/>
+      <appender-ref ref="ERROR"/>
+    </root>
+  </springProfile>
+
+
+</configuration>
